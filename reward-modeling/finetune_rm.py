@@ -16,6 +16,7 @@ import random
 class SparsePairwiseTrainer(Trainer):
     def compute_loss(self, model, inputs, return_outputs=False):
         # forward pass
+        # breakpoint()
         PAD_ID = model.PAD_ID
         assert len(inputs["input_ids"].shape) == 2
         bs = inputs["input_ids"].shape[0] // 2
@@ -81,10 +82,11 @@ def compute_metrics(eval_preds):
 
 
 def train(config):
-    tokenizer = AutoTokenizer.from_pretrained(config["tokenizer_path"])
+    # tokenizer = AutoTokenizer.from_pretrained(config["tokenizer_path"])
+    tokenizer = AutoTokenizer.from_pretrained(**config["tokenizer"])
     tokenizer.pad_token = tokenizer.eos_token
     training_args = TrainingArguments(**config["train_args"])
-    model = make_rm(config["model_path"], config["model_type"], config["tokenizer_path"])
+    model = make_rm(config["model_path"], config["model_type"], config["tokenizer"]["pretrained_model_name_or_path"])
     freeze_bottom_causal_layers(model, config["num_layers_unfrozen"])
     PAD_ID = tokenizer(tokenizer.pad_token)["input_ids"][0]
     model.PAD_ID = PAD_ID
@@ -92,7 +94,8 @@ def train(config):
 
     data = load_dataset(config["data_path"])
     train_data = data["train"]
-    max_length = 1024
+    # max_length = 1024
+    max_length = 256
     if data.get("test") is not None:
         eval_data = data["test"]
         train_dataset = PairwiseDataset(train_data, tokenizer, max_length=max_length, max_num=config["max_train_size"])

@@ -1,15 +1,22 @@
-model_path: "Dahoas/gptneo-sft-static"
+# model_path: "Dahoas/gptneo-sft-static"
+model_path: "EleutherAI/gpt-neo-125M"
+
 model_type: "causal"
-tokenizer_path: "EleutherAI/gpt-neo-1.3B"
+# tokenizer_path: "EleutherAI/gpt-neo-1.3B"
+# tokenizer_path: "EleutherAI/gpt-neo-125M"
 num_layers_unfrozen: 0.67
 
+tokenizer:
+  pretrained_model_name_or_path: "EleutherAI/gpt-neo-125M"
+
 train_args:
-  output_dir: "/fsx/alex/ckpts/gptneo-rm"
+  # output_dir: "/fsx/alex/ckpts/gptneo-rm"
+  output_dir: "../ckpts/gptneo-rm"
   num_train_epochs: 1
   logging_steps: 100
   save_strategy: "epoch"
-  per_device_train_batch_size: 2
-  per_device_eval_batch_size: 2
+  per_device_train_batch_size: 4
+  per_device_eval_batch_size: 4
   warmup_steps: 100
   weight_decay: 0.01
   learning_rate: 1.0e-5
