@@ -5,7 +5,7 @@ from torch.utils.data import Dataset, random_split
 from transformers import AutoTokenizer, TrainingArguments, Trainer, AutoModelForCausalLM, IntervalStrategy, AutoModel, AutoConfig, PreTrainedModel, AutoModelForSequenceClassification
 import json
 import deepspeed
-from rm_datasets import PairwiseDataset, PairwiseEvalDataset, pairwise_data_collator
+from rm_datasets import PairwiseDataset, PairwiseEvalDataset, pairwise_data_collator, NoPromptPairwiseDataset, NoPromptPairwiseEvalDataset
 import argparse
 from utils import freeze_bottom_causal_layers, load_yaml, make_rm
 from datasets import load_dataset
@@ -16,7 +16,6 @@ import random
 class SparsePairwiseTrainer(Trainer):
     def compute_loss(self, model, inputs, return_outputs=False):
         # forward pass
-        # breakpoint()
         PAD_ID = model.PAD_ID
         assert len(inputs["input_ids"].shape) == 2
         bs = inputs["input_ids"].shape[0] // 2
@@ -92,19 +91,24 @@ def train(config):
     model.PAD_ID = PAD_ID
     model.config.pad_token_id = model.config.eos_token_id
 
-    data = load_dataset(config["data_path"])
+    data = load_dataset(config["data_path"], data_dir = config['data_dir'])
+    # data = load_dataset("Anthropic/hh-rlhf", data_dir="harmless-base")
     train_data = data["train"]
     # max_length = 1024
     max_length = 256
     if data.get("test") is not None:
         eval_data = data["test"]
-        train_dataset = PairwiseDataset(train_data, tokenizer, max_length=max_length, max_num=config["max_train_size"])
-        eval_dataset = PairwiseEvalDataset(eval_data, tokenizer, max_length=max_length)
+        # train_dataset = PairwiseDataset(train_data, tokenizer, max_length=max_length, max_num=config["max_train_size"])
+        train_dataset = NoPromptPairwiseDataset(train_data, tokenizer, max_length=max_length, max_num=config["max_train_size"])
+        # eval_dataset = PairwiseEvalDataset(eval_data, tokenizer, max_length=max_length)
+        eval_dataset = NoPromptPairwiseEvalDataset(eval_data, tokenizer, max_length=max_length)
     else:
         split = data["train"].train_test_split(test_size=0.05)
         eval_data = split["test"]
-        train_dataset = PairwiseDataset(split["train"], tokenizer, max_length=max_length, max_num=config["max_train_size"])
-        eval_dataset = PairwiseEvalDataset(eval_data, tokenizer, max_length=max_length)
+        # train_dataset = PairwiseDataset(split["train"], tokenizer, max_length=max_length, max_num=config["max_train_size"])
+        train_dataset = NoPromptPairwiseDataset(split["train"], tokenizer, max_length=max_length, max_num=config["max_train_size"])
+        # eval_dataset = PairwiseEvalDataset(eval_data, tokenizer, max_length=max_length)
+        eval_dataset = NoPromptPairwiseEvalDataset(eval_data, tokenizer, max_length=max_length)
 
     training_args = TrainingArguments(**config["train_args"])
     if config["trainer_type"] == "sparse":

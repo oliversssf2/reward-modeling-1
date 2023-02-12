@@ -12,7 +12,7 @@ tokenizer:
 train_args:
   # output_dir: "/fsx/alex/ckpts/gptneo-rm"
   output_dir: "../ckpts/gptneo-rm"
-  num_train_epochs: 1
+  num_train_epochs: 100
   logging_steps: 100
   save_strategy: "epoch"
   per_device_train_batch_size: 4
@@ -25,5 +25,9 @@ train_args:
   fp16: False
   bf16: True
 
-data_path: "Dahoas/rm-static"
+data_path: "Anthropic/hh-rlhf"
+data_dir: "harmless-base"
+
 trainer_type: "sparse"
+
+
