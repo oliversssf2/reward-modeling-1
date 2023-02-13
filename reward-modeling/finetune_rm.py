@@ -71,13 +71,13 @@ class PairwiseTrainer(Trainer):
         return (loss, outputs) if return_outputs else loss
 
 
-def compute_metrics(eval_preds):
-    print("EVAL!!!")
-    preds = eval_preds.predictions[0].view(-1, 2)
-    acc = sum(preds[:, 0] >= preds[:, 1]) / preds.shape[0]
-    if torch.distributed.get_rank() == 0:
-        wandb.log({"acc": acc})
-    return {"accuracy": acc}
+# def compute_metrics(eval_preds):
+#     print("EVAL!!!")
+#     preds = eval_preds.predictions[0].view(-1, 2)
+#     acc = sum(preds[:, 0] >= preds[:, 1]) / preds.shape[0]
+#     if torch.distributed.get_rank() == 0:
+#         wandb.log({"acc": acc})
+#     return {"accuracy": acc}
 
 
 def train(config):
@@ -112,7 +112,8 @@ def train(config):
 
     training_args = TrainingArguments(**config["train_args"])
     if config["trainer_type"] == "sparse":
-        trainer = SparsePairwiseTrainer(model=model, args=training_args, train_dataset=train_dataset, compute_metrics=compute_metrics,
+        # trainer = SparsePairwiseTrainer(model=model, args=training_args, train_dataset=train_dataset, compute_metrics=compute_metrics,
+        trainer = SparsePairwiseTrainer(model=model, args=training_args, train_dataset=train_dataset,
              eval_dataset=eval_dataset, data_collator=pairwise_data_collator)
     elif config["trainer_type"] == "dense":
         trainer = DensePairwiseTrainer(model=model, args=training_args, train_dataset=train_dataset,
